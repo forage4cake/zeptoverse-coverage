@@ -101,6 +101,7 @@ def parse_page(url):
 def gdelt_urls():
     query = quote('"zeptoverse"')
     api = f"https://api.gdeltproject.org/api/v2/doc/doc?query={query}&mode=ArtList&format=json&maxrecords=250&sort=DateDesc"
+
     try:
         response = SESSION.get(api, timeout=45)
         print(f"GDELT HTTP status: {response.status_code}")
@@ -118,12 +119,29 @@ def gdelt_urls():
         print(f"GDELT returned {len(urls)} article URLs.")
         return urls
 
+    except requests.RequestException as exc:
+        print(f"GDELT request failed: {exc}")
+        return []
+    except Exception as exc:
+        print(f"GDELT search error: {exc}")
+        return []
+
+
 def reddit_urls():
     url = "https://www.reddit.com/search.rss?q=%22zeptoverse%22&sort=new"
+
     try:
-        xml = SESSION.get(url, timeout=20).text
+        response = SESSION.get(url, timeout=20)
+        response.raise_for_status()
+        xml = response.text
         soup = BeautifulSoup(xml, "xml")
-        return [x.get_text(strip=True) for x in soup.find_all("link") if x.get_text(strip=True).startswith("http")]
+
+        return [
+            x.get_text(strip=True)
+            for x in soup.find_all("link")
+            if x.get_text(strip=True).startswith("http")
+        ]
+
     except Exception as exc:
         print(f"Reddit RSS unavailable: {exc}")
         return []
