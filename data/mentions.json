@@ -1,4 +1,23 @@
 {
-  "updated_at": "2026-11-10 18:53 UTC",
-  "mentions": []
+  "updated_at": "2026-11-10 18:54 UTC",
+  "mentions": [
+    {
+      "url": "https://www.sciencealert.com/after-42-years-of-searching-physicists-find-evidence-of-a-one-in-10-billion-particle-decay",
+      "title": "After 42 Years of Searching, Physicists Find Evidence of a One-in-10-Billion Particle Decay",
+      "source": "sciencealert.com",
+      "summary": "We may be one gigantically small step closer to solving the most essential Universal questions, including what happened immediately after the Big Bang, where is dark matter hiding, and why does normal matter even exist?",
+      "date": "2026-11-06",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://udaipurkiran.com/cern-physicists-detect-rare-particle-decay-after-40-year-search/",
+      "title": "CERN Physicists Detect Rare Particle Decay After 40-Year Search | Udaipur Kiran",
+      "source": "udaipurkiran.com",
+      "summary": "CERN, Nov 6: Scientists at CERN have detected evidence of an extremely rare decay of a particle known as a beauty quark, marking a significant advancement in particle physics.",
+      "date": "2026-11-05",
+      "image": "",
+      "image_license": ""
+    }
+  ]
 }
