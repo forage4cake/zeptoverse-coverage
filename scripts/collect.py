@@ -234,7 +234,120 @@ def bluesky_mentions():
         print(f"Bluesky unavailable: {exc}")
         return []
 
+def youtube_mentions():
+    """Find public YouTube videos mentioning Zeptoverse."""
 
+    url = "https://www.youtube.com/feeds/videos.xml?search_query=%22zeptoverse%22"
+
+    try:
+        response = SESSION.get(url, timeout=25)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "xml")
+        results = []
+
+        for entry in soup.find_all("entry"):
+            title_node = entry.find("title")
+            link_node = entry.find("link")
+
+            description_node = entry.find(
+                lambda tag: tag.name and
+                tag.name.split(":")[-1] == "description"
+            )
+
+            title = (
+                title_node.get_text(" ", strip=True)
+                if title_node else ""
+            )
+
+            description = (
+                description_node.get_text(" ", strip=True)
+                if description_node else ""
+            )
+
+            link = link_node.get("href") if link_node else ""
+
+            if not link or not TERM.search(title + " " + description):
+                continue
+
+            published = entry.find("published")
+
+            results.append({
+                "url": link,
+                "title": title or "YouTube video mentioning Zeptoverse",
+                "source": "YouTube",
+                "summary": sentence(description or title),
+                "date": published.get_text(strip=True)[:10] if published else "",
+                "image": "",
+                "image_license": ""
+            })
+
+        print(f"YouTube: {len(results)} verified videos.")
+        return results
+
+    except Exception as exc:
+        print(f"YouTube unavailable: {exc}")
+        return []
+
+
+def podcast_mentions():
+    """Search Apple's public podcast episode directory."""
+
+    url = "https://itunes.apple.com/search"
+
+    try:
+        response = SESSION.get(
+            url,
+            params={
+                "term": "Zeptoverse",
+                "media": "podcast",
+                "entity": "podcastEpisode",
+                "limit": 50
+            },
+            timeout=25
+        )
+
+        response.raise_for_status()
+        data = response.json()
+
+        results = []
+
+        for episode in data.get("results", []):
+            title = episode.get("trackName", "")
+            show = episode.get("collectionName", "")
+            description = episode.get("description", "")
+
+            combined = f"{title} {show} {description}"
+
+            if not TERM.search(combined):
+                continue
+
+            link = (
+                episode.get("trackViewUrl")
+                or episode.get("episodeUrl")
+            )
+
+            if not link:
+                continue
+
+            release = episode.get("releaseDate", "")[:10]
+
+            results.append({
+                "url": link,
+                "title": title or "Podcast episode mentioning Zeptoverse",
+                "source": "Apple Podcasts",
+                "summary": sentence(description or title),
+                "date": release,
+                "image": "",
+                "image_license": ""
+            })
+
+        print(f"Podcasts: {len(results)} verified episodes.")
+        return results
+
+    except Exception as exc:
+        print(f"Podcast search unavailable: {exc}")
+        return []
 def parse_page(url):
     try:
         response = SESSION.get(
@@ -406,7 +519,17 @@ def main():
         if item["url"] not in existing:
             existing[item["url"]] = item
             print(f"Verified: Bluesky — {item['summary']}")
+# Add verified YouTube videos.
+    for item in youtube_mentions():
+        if item["url"] not in existing:
+            existing[item["url"]] = item
+            print(f"Verified: YouTube — {item['title']}")
 
+    # Add verified podcast episodes.
+    for item in podcast_mentions():
+        if item["url"] not in existing:
+            existing[item["url"]] = item
+            print(f"Verified: Podcast — {item['title']}")
     # Check external article pages.
     for url in urls:
         if url in existing:
