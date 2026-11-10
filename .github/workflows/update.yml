@@ -34,7 +34,10 @@ jobs:
         run: pip install -r requirements.txt
       - name: Collect and verify mentions
         run: python scripts/collect.py
-            - name: Commit updated feed
+                  - name: Collect and verify mentions
+        run: python scripts/collect.py
+
+      - name: Commit updated feed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -52,6 +55,9 @@ jobs:
             fi
             echo "Push attempt $attempt failed. Retrying..."
           done
+
+          echo "Unable to push after three attempts."
+          exit 1
 
           echo "Unable to push after three attempts."
           exit 1
