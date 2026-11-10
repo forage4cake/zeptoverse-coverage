@@ -235,55 +235,60 @@ def bluesky_mentions():
         return []
 
 def youtube_mentions():
-    """Find public YouTube videos mentioning Zeptoverse."""
+    """Search YouTube using its public search results page."""
 
-    url = "https://www.youtube.com/feeds/videos.xml?search_query=%22zeptoverse%22"
+    url = "https://www.youtube.com/results"
 
     try:
-        response = SESSION.get(url, timeout=25)
+        response = SESSION.get(
+            url,
+            params={"search_query": "Zeptoverse"},
+            timeout=30
+        )
+
         response.raise_for_status()
 
-        soup = BeautifulSoup(response.text, "xml")
+        soup = BeautifulSoup(response.text, "html.parser")
         results = []
 
-        for entry in soup.find_all("entry"):
-            title_node = entry.find("title")
-            link_node = entry.find("link")
+        for script in soup.find_all("script"):
+            raw = script.string or script.get_text()
 
-            description_node = entry.find(
-                lambda tag: tag.name and
-                tag.name.split(":")[-1] == "description"
-            )
-
-            title = (
-                title_node.get_text(" ", strip=True)
-                if title_node else ""
-            )
-
-            description = (
-                description_node.get_text(" ", strip=True)
-                if description_node else ""
-            )
-
-            link = link_node.get("href") if link_node else ""
-
-            if not link or not TERM.search(title + " " + description):
+            if not raw or "videoRenderer" not in raw:
                 continue
 
-            published = entry.find("published")
+            video_ids = re.findall(
+                r'"videoId":"([A-Za-z0-9_-]{11})"',
+                raw
+            )
 
-            results.append({
-                "url": link,
-                "title": title or "YouTube video mentioning Zeptoverse",
-                "source": "YouTube",
-                "summary": sentence(description or title),
-                "date": published.get_text(strip=True)[:10] if published else "",
-                "image": "",
-                "image_license": ""
-            })
+            for video_id in video_ids:
+                address = (
+                    "https://www.youtube.com/watch?v="
+                    + video_id
+                )
 
-        print(f"YouTube: {len(results)} verified videos.")
-        return results
+                if any(item["url"] == address for item in results):
+                    continue
+
+                results.append({
+                    "url": address,
+                    "title": "YouTube video mentioning Zeptoverse",
+                    "source": "YouTube",
+                    "summary": "YouTube search result. "
+                               "The video title and description "
+                               "could not be independently verified.",
+                    "date": "",
+                    "image": "",
+                    "image_license": ""
+                })
+
+        print(
+            f"YouTube search returned {len(results)} candidates. "
+            "These require manual verification."
+        )
+
+        return []
 
     except Exception as exc:
         print(f"YouTube unavailable: {exc}")
