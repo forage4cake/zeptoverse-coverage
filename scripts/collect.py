@@ -1,96 +1,455 @@
+
 #!/usr/bin/env python3
-"""Collect exact-word Zeptoverse mentions and write a verified JSON feed."""
+"""Collect and verify public Zeptoverse media mentions."""
+
 import json
 import os
 import re
 import time
 from datetime import datetime, timezone
-from urllib.parse import quote, urljoin, urlparse
+from urllib.parse import quote, urlparse
 
 import requests
 from bs4 import BeautifulSoup
 
 OUT = "data/mentions.json"
 TERM = re.compile(r"\bzeptoverse\b", re.I)
-HEADERS = {"User-Agent": "ZeptoverseCoverageBot/1.0 (public-interest media index)"}
+
+HEADERS = {
+    "User-Agent": "ZeptoverseCoverageBot/1.0 (public media index)"
+}
+
 SESSION = requests.Session()
 SESSION.headers.update(HEADERS)
-
-# Deliberately conservative: only image-specific CC0/public-domain/CC BY
-# declarations in structured ImageObject metadata are accepted automatically.
-# Other licences require manual review because their conditions can vary.
-ALLOWED_LICENSE_MARKERS = (
-    "creativecommons.org/publicdomain/zero/",
-    "creativecommons.org/publicdomain/mark/",
-    "creativecommons.org/licenses/by/",
-)
 
 
 def sentence(text, limit=360):
     text = re.sub(r"\s+", " ", text or "").strip()
+
     if not text:
-        return "The source page contains a verified mention of zeptoverse."
+        return "The source page contains a verified mention of Zeptoverse."
+
     match = re.search(r".+?[.!?](?:\s|$)", text)
     result = match.group(0).strip() if match else text
+
     return result[:limit].rstrip()
 
 
-def source_name(url, title=""):
-    host = (urlparse(url).hostname or "").lower().replace("www.", "")
+def source_name(url):
+    host = (urlparse(url).hostname or "").lower()
+    host = host.replace("www.", "")
+
     known = {
-        "bbc.com": "BBC News",
         "bbc.co.uk": "BBC News",
+        "bbc.com": "BBC News",
         "theguardian.com": "The Guardian",
         "reddit.com": "Reddit",
-        "cam.ac.uk": "University of Cambridge",
-        "wired.com": "WIRED",
+        "news.google.com": "Google News",
+        "news.yahoo.com": "Yahoo News",
+        "bing.com": "Bing News",
+        "bsky.app": "Bluesky",
+        "ycombinator.com": "Hacker News",
     }
+
     for domain, name in known.items():
         if host == domain or host.endswith("." + domain):
             return name
+
     return host or "Online source"
 
 
-def normalise_url(value, base_url):
-    if isinstance(value, dict):
-        value = value.get("url") or value.get("contentUrl") or value.get("@id")
-    if not isinstance(value, str) or not value.strip():
-        return ""
-    return urljoin(base_url, value.strip())
+def rss_urls(url):
+    try:
+        response = SESSION.get(url, timeout=25)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "xml")
+        results = []
+
+        for link in soup.find_all("link"):
+            address = link.get("href") or link.get_text(strip=True)
+
+            if address.startswith("http"):
+                results.append(address)
+
+        print(f"RSS source returned {len(results)} links.")
+        return results
+
+    except Exception as exc:
+        print(f"RSS source unavailable: {exc}")
+        return []
 
 
-def walk_json(value):
-    """Yield dictionaries nested inside JSON-LD structures."""
-    if isinstance(value, dict):
-        yield value
-        for child in value.values():
-            yield from walk_json(child)
-    elif isinstance(value, list):
-        for child in value:
-            yield from walk_json(child)
+def google_news_urls(region):
+    query = quote('"Zeptoverse"')
+    url = (
+        "https://news.google.com/rss/search?"
+        f"q={query}&hl={region['language']}"
+        f"&gl={region['country']}"
+        f"&ceid={region['edition']}"
+    )
+
+    results = rss_urls(url)
+    print(f"Google News {region['country']}: {len(results)} results.")
+    return results
 
 
-def licensed_image_from_jsonld(soup, page_url):
-    """Return an image only when its own ImageObject declares an allowed licence."""
-    og = soup.find("meta", property="og:image")
-    og_url = normalise_url(og.get("content") if og else "", page_url)
+def bing_news_urls():
+    query = quote('"Zeptoverse"')
+    url = (
+        "https://www.bing.com/news/search?"
+        f"q={query}&format=rss"
+    )
 
-    for script in soup.find_all("script", type="application/ld+json"):
-        raw = script.string or script.get_text()
-        if not raw:
-            continue
-        try:
-            data = json.loads(raw)
-        except (TypeError, ValueError):
-            continue
+    results = rss_urls(url)
+    print(f"Bing News: {len(results)} results.")
+    return results
 
-        for item in walk_json(data):
-            item_type = item.get("@type", [])
-            if isinstance(item_type, str):
-                item_type = [item_type]
-            if not any(str(t).lower().endswith("imageobject") for t in item_type):
+
+def gdelt_urls():
+    query = quote('"zeptoverse"')
+
+    api = (
+        "https://api.gdeltproject.org/api/v2/doc/doc?"
+        f"query={query}&mode=ArtList&format=json"
+        "&maxrecords=250&sort=DateDesc"
+    )
+
+    try:
+        response = SESSION.get(api, timeout=45)
+        response.raise_for_status()
+
+        data = response.json()
+        articles = data.get("articles", [])
+
+        urls = [
+            article.get("url")
+            for article in articles
+            if article.get("url")
+        ]
+
+        print(f"GDELT: {len(urls)} results.")
+        return urls
+
+    except Exception as exc:
+        print(f"GDELT unavailable: {exc}")
+        return []
+
+
+def reddit_urls():
+    url = (
+        "https://www.reddit.com/search.rss?"
+        'q=%22zeptoverse%22&sort=new'
+    )
+
+    results = rss_urls(url)
+    print(f"Reddit: {len(results)} results.")
+    return results
+
+
+def hacker_news_urls():
+    url = (
+        "https://hn.algolia.com/api/v1/search?"
+        "query=zeptoverse&tags=story"
+    )
+
+    try:
+        response = SESSION.get(url, timeout=25)
+        response.raise_for_status()
+
+        data = response.json()
+        results = []
+
+        for hit in data.get("hits", []):
+            address = hit.get("url")
+
+            if address:
+                results.append(address)
+
+        print(f"Hacker News: {len(results)} results.")
+        return results
+
+    except Exception as exc:
+        print(f"Hacker News unavailable: {exc}")
+        return []
+
+
+def bluesky_mentions():
+    """Collect publicly searchable Bluesky posts."""
+
+    api = (
+        "https://public.api.bsky.app/xrpc/"
+        "app.bsky.feed.searchPosts"
+    )
+
+    try:
+        response = SESSION.get(
+            api,
+            params={"q": "zeptoverse", "limit": 100},
+            timeout=25
+        )
+
+        response.raise_for_status()
+        data = response.json()
+
+        results = []
+
+        for post in data.get("posts", []):
+            record = post.get("record", {})
+            text = record.get("text", "")
+
+            if not TERM.search(text):
                 continue
 
-            image_url = normalise_url(item.get("contentUrl") or item.get("url") or item.get("@id"), page_url)
-            if not image_url:
+            author = post.get("author", {})
+            handle = author.get("handle", "")
+            uri = post.get("uri", "")
+
+            parts = uri.split("/")
+
+            if len(parts) < 5 or not handle:
                 continue
+
+            rkey = parts[-1]
+            address = (
+                f"https://bsky.app/profile/{handle}/post/{rkey}"
+            )
+
+            created = record.get("createdAt", "")[:10]
+
+            results.append({
+                "url": address,
+                "title": "Bluesky discussion mentioning Zeptoverse",
+                "source": "Bluesky",
+                "summary": sentence(text),
+                "date": created,
+                "image": "",
+                "image_license": "",
+            })
+
+        print(f"Bluesky: {len(results)} verified posts.")
+        return results
+
+    except Exception as exc:
+        print(f"Bluesky unavailable: {exc}")
+        return []
+
+
+def parse_page(url):
+    try:
+        response = SESSION.get(
+            url,
+            timeout=20,
+            allow_redirects=True
+        )
+
+        if response.status_code >= 400 or not response.text:
+            return None
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        text = soup.get_text(" ", strip=True)
+
+        if not TERM.search(text):
+            return None
+
+        title = (
+            soup.title.get_text(" ", strip=True)
+            if soup.title else ""
+        )
+
+        for key in ("og:title", "twitter:title"):
+            tag = (
+                soup.find("meta", attrs={"property": key})
+                or soup.find("meta", attrs={"name": key})
+            )
+
+            if tag and tag.get("content"):
+                title = tag["content"].strip()
+                break
+
+        desc = ""
+
+        for key in (
+            "og:description",
+            "description",
+            "twitter:description"
+        ):
+            tag = (
+                soup.find("meta", attrs={"property": key})
+                or soup.find("meta", attrs={"name": key})
+            )
+
+            if tag and tag.get("content"):
+                desc = tag["content"].strip()
+                break
+
+        if not desc:
+            paragraphs = [
+                p.get_text(" ", strip=True)
+                for p in soup.find_all("p")
+            ]
+
+            desc = next(
+                (p for p in paragraphs if TERM.search(p)),
+                ""
+            )
+
+            if not desc:
+                desc = next(
+                    (p for p in paragraphs if len(p) > 60),
+                    ""
+                )
+
+        date = ""
+
+        for key in (
+            "article:published_time",
+            "datePublished",
+            "pubdate"
+        ):
+            tag = (
+                soup.find("meta", attrs={"property": key})
+                or soup.find("meta", attrs={"name": key})
+            )
+
+            if tag and tag.get("content"):
+                date = tag["content"][:10]
+                break
+
+        canonical = soup.find(
+            "link",
+            rel="canonical"
+        )
+
+        final_url = (
+            canonical.get("href")
+            if canonical and canonical.get("href")
+            else response.url
+        )
+
+        # Images remain blank unless reuse permission
+        # can be established through a separate review.
+        return {
+            "url": final_url,
+            "title": title or "Zeptoverse mention",
+            "source": source_name(final_url),
+            "summary": sentence(desc),
+            "date": date,
+            "image": "",
+            "image_license": ""
+        }
+
+    except Exception as exc:
+        print(f"Could not verify {url}: {exc}")
+        return None
+
+
+def main():
+    os.makedirs("data", exist_ok=True)
+
+    try:
+        with open(OUT, encoding="utf-8") as file:
+            old = json.load(file)
+    except Exception:
+        old = {"mentions": []}
+
+    existing = {
+        item.get("url"): item
+        for item in old.get("mentions", [])
+    }
+
+    regions = [
+        {
+            "country": "GB",
+            "language": "en-GB",
+            "edition": "GB:en"
+        },
+        {
+            "country": "US",
+            "language": "en-US",
+            "edition": "US:en"
+        },
+        {
+            "country": "CA",
+            "language": "en-CA",
+            "edition": "CA:en"
+        },
+        {
+            "country": "AU",
+            "language": "en-AU",
+            "edition": "AU:en"
+        },
+        {
+            "country": "IE",
+            "language": "en-IE",
+            "edition": "IE:en"
+        }
+    ]
+
+    urls = []
+
+    for region in regions:
+        urls.extend(google_news_urls(region))
+
+    urls.extend(bing_news_urls())
+    urls.extend(gdelt_urls())
+    urls.extend(reddit_urls())
+    urls.extend(hacker_news_urls())
+
+    urls = list(dict.fromkeys(urls))
+
+    print(f"Total candidate URLs: {len(urls)}")
+
+    # Add verified public Bluesky posts.
+    for item in bluesky_mentions():
+        if item["url"] not in existing:
+            existing[item["url"]] = item
+            print(f"Verified: Bluesky — {item['summary']}")
+
+    # Check external article pages.
+    for url in urls:
+        if url in existing:
+            continue
+
+        item = parse_page(url)
+
+        if item:
+            existing[item["url"]] = item
+
+            print(
+                f"Verified: {item['source']} — "
+                f"{item['title']}"
+            )
+
+        time.sleep(0.4)
+
+    # Preserve existing cards and put newest dates first.
+    items = sorted(
+        existing.values(),
+        key=lambda item: item.get("date") or "",
+        reverse=True
+    )[:500]
+
+    payload = {
+        "updated_at": datetime.now(
+            timezone.utc
+        ).strftime("%Y-%m-%d %H:%M UTC"),
+        "mentions": items
+    }
+
+    with open(OUT, "w", encoding="utf-8") as file:
+        json.dump(
+            payload,
+            file,
+            ensure_ascii=False,
+            indent=2
+        )
+
+    print(
+        f"Feed now contains {len(items)} verified items."
+    )
+
+
+if __name__ == "__main__":
+    main()
