@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-10 19:25 UTC",
+  "updated_at": "2026-11-10 19:44 UTC",
   "mentions": [
     {
       "url": "https://www.sciencealert.com/after-42-years-of-searching-physicists-find-evidence-of-a-one-in-10-billion-particle-decay",
@@ -16,6 +16,69 @@
       "source": "udaipurkiran.com",
       "summary": "CERN, Nov 6: Scientists at CERN have detected evidence of an extremely rare decay of a particle known as a beauty quark, marking a significant advancement in particle physics.",
       "date": "2026-11-05",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.wired.com/story/particle-physicists-are-getting-a-first-glimpse-into-the-zeptoverse/",
+      "title": "Particle Physicists Are Getting a First Glimpse Into the ‘Zeptoverse’",
+      "source": "wired.com",
+      "summary": "An extremely rare matter-decay event opens up new possibilities for researching the physical world on scales 100 billion times smaller than an atom.",
+      "date": "2026-11-05",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://metro.co.uk/2026/11/03/humans-exploring-zeptoverse-a-world-100billion-times-smaller-atom-29761699/",
+      "title": "Humans are exploring the 'Zeptoverse'",
+      "source": "metro.co.uk",
+      "summary": "'You’d need to do some serious shrinking.'",
+      "date": "2026-11-03",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.bing.com/news/search?q=%22Zeptoverse%22&format=rss",
+      "title": "\"Zeptoverse\" - BingNews",
+      "source": "Bing News",
+      "summary": "The source page contains a verified mention of Zeptoverse.",
+      "date": "",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.educationtimes.com/news/zeptoverse-scientists-uncover-a-mysterious-world-smaller-than-atoms-in-a-discovery-that-could-change-physics-forever/articleshow/135668758.cms",
+      "title": "Zeptoverse: Scientists uncover a mysterious world smaller than atoms in a discovery that could change physics forever - The Times of India",
+      "source": "educationtimes.com",
+      "summary": "Scientists have detected signals from the smallest scale of nature yet explored, a realm roughly 100 billion times smaller than an atom.",
+      "date": "",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://in.mashable.com/science/115865/zeptoverse-scientists-at-cern-find-evidence-of-rarest-beauty-particle-decay-yet",
+      "title": "Zeptoverse: Scientists At CERN Find Evidence Of Rarest Beauty Particle Decay Yet",
+      "source": "in.mashable.com",
+      "summary": "Dark matter clues may be hiding in a world 100 billion times smaller than an atom",
+      "date": "",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.cam.ac.uk/stories/zeptoverse",
+      "title": "Physicists knock at the door of the zeptoverse",
+      "source": "cam.ac.uk",
+      "summary": "The LHC is powerful enough to study the structure of reality down to a hundred zeptometres – thousands of trillions of times smaller than the width of a human hair – in search of new particles that may reside in the zeptoverse.",
+      "date": "",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.manchester.ac.uk/about/news/manchester-physicists-step-closer-to-the-zeptoverse-after-42-year-particle-search/",
+      "title": "Manchester physicists step closer to the ‘Zeptoverse’ after 42-year particle search",
+      "source": "manchester.ac.uk",
+      "summary": "Scientists have found the first evidence for an extremely rare particle decay known as ‘Bd to mu mu’.The decay is predicted to happen only once in around 10 billion beauty particles and has taken more than 40 years to find.The result has a statistical significance of 3.2 sigma, enough to constitute evidence, but not enough to claim the gold ...",
+      "date": "",
       "image": "",
       "image_license": ""
     }
