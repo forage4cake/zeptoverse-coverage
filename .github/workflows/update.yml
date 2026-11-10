@@ -34,13 +34,27 @@ jobs:
         run: pip install -r requirements.txt
       - name: Collect and verify mentions
         run: python scripts/collect.py
-      - name: Commit updated feed
+            - name: Commit updated feed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/mentions.json
-          git diff --cached --quiet || git commit -m "Update verified Zeptoverse mentions"
-          git push
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Update verified Zeptoverse mentions"
+          fi
+
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "Feed successfully updated."
+              exit 0
+            fi
+            echo "Push attempt $attempt failed. Retrying..."
+          done
+
+          echo "Unable to push after three attempts."
+          exit 1
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
       - name: Upload site
