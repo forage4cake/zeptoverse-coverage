@@ -74,12 +74,63 @@ let mentions = [];
 function esc(value="") {
   return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
-function render() {
+function makeArtwork(mention = {}) {
+  let seed = 0;
+  const text = (mention.title || "") + (mention.source || "");
+  for (let i = 0; i < text.length; i++) {
+    seed = (Math.imul(seed, 31) + text.charCodeAt(i)) >>> 0;
+  }
+
+  const random = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+
+  const hue = Math.floor(random() * 360);
+  const hue2 = (hue + 65 + Math.floor(random() * 100)) % 360;
+
+  const particles = Array.from({ length: 32 }, () => {
+    const x = Math.floor(random() * 800);
+    const y = Math.floor(random() * 400);
+    const r = 1 + random() * 5;
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="white" opacity="${0.2 + random() * 0.65}"/>`;
+  }).join("");
+
+  const cells = Array.from({ length: 7 }, () => {
+    const x = 120 + random() * 560;
+    const y = 60 + random() * 280;
+    const r = 18 + random() * 65;
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="hsl(${hue2},85%,75%)" stroke-width="${1 + random() * 3}" opacity=".55"/>
+    <circle cx="${x}" cy="${y}" r="${r * 0.55}" fill="hsl(${hue},80%,65%)" opacity=".12"/>`;
+  }).join("");
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+    <defs>
+      <radialGradient id="bg">
+        <stop stop-color="hsl(${hue},65%,32%)"/>
+        <stop offset="1" stop-color="#071326"/>
+      </radialGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="5" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect width="800" height="400" fill="url(#bg)"/>
+    <g filter="url(#glow)">${cells}</g>
+    <g>${particles}</g>
+    <circle cx="400" cy="200" r="85" fill="none" stroke="hsl(${hue2},90%,80%)" stroke-width="2" opacity=".7"/>
+    <circle cx="400" cy="200" r="45" fill="hsl(${hue2},90%,75%)" opacity=".18"/>
+    <circle cx="400" cy="200" r="12" fill="white" opacity=".9"/>
+  </svg>`;
+
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+  function render() {
   const q = filter.value.trim().toLowerCase();
   const shown = mentions.filter(m => [m.title,m.source,m.summary,m.url].join(" ").toLowerCase().includes(q));
   cards.innerHTML = shown.map(m => `
     <article class="card">
-      ${m.image ? `<img src="${esc(m.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<div class="no-image" aria-hidden="true"></div>`}
+  ${m.image ? `<img src="${esc(m.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<img src="${makeArtwork(m)}" alt="Zeptoverse-inspired scientific artwork" loading="lazy">`}
       <div class="body">
         <div class="source">${esc(m.source || "Online source")}</div>
         <h2>${esc(m.title || "Untitled mention")}</h2>
