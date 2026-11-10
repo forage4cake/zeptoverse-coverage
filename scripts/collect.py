@@ -1,116 +1,96 @@
-            desc = next((p for p in paragraphs if TERM.search(p)), "")
-            if not desc:
-                desc = next((p for p in paragraphs if len(p) > 60), "")
+#!/usr/bin/env python3
+"""Collect exact-word Zeptoverse mentions and write a verified JSON feed."""
+import json
+import os
+import re
+import time
+from datetime import datetime, timezone
+from urllib.parse import quote, urljoin, urlparse
 
-        date = ""
-        for key in ("article:published_time", "datePublished", "pubdate"):
-            tag = soup.find("meta", attrs={"property": key}) or soup.find("meta", attrs={"name": key})
-            if tag and tag.get("content"):
-                date = tag["content"][:10]
-                break
-        if not date:
-            for script in soup.find_all("script", type="application/ld+json"):
-                try:
-                    data = json.loads(script.string or script.get_text())
-                    for item in walk_json(data):
-                        if item.get("datePublished"):
-                            date = str(item["datePublished"])[:10]
-                            break
-                except Exception:
-                    pass
-                if date:
-                    break
+import requests
+from bs4 import BeautifulSoup
 
-        image_url, image_license, image_credit = licensed_image_from_jsonld(soup, response.url)
-        canonical = soup.find("link", rel="canonical")
-        final_url = urljoin(response.url, canonical.get("href")) if canonical and canonical.get("href") else response.url
+OUT = "data/mentions.json"
+TERM = re.compile(r"\bzeptoverse\b", re.I)
+HEADERS = {"User-Agent": "ZeptoverseCoverageBot/1.0 (public-interest media index)"}
+SESSION = requests.Session()
+SESSION.headers.update(HEADERS)
 
-        return {
-            "url": final_url,
-            "title": title or "Zeptoverse mention",
-            "source": source_name(final_url),
-            "summary": sentence(desc),
-            "date": date,
-            "image": image_url,
-            "image_license": image_license,
-            "image_credit": image_credit,
-        }
-    except Exception as exc:
-        print(f"Could not verify {url}: {exc}")
-        return None
+# Deliberately conservative: only image-specific CC0/public-domain/CC BY
+# declarations in structured ImageObject metadata are accepted automatically.
+# Other licences require manual review because their conditions can vary.
+ALLOWED_LICENSE_MARKERS = (
+    "creativecommons.org/publicdomain/zero/",
+    "creativecommons.org/publicdomain/mark/",
+    "creativecommons.org/licenses/by/",
+)
 
 
-def gdelt_urls():
-    query = quote('"zeptoverse"')
-    api = f"https://api.gdeltproject.org/api/v2/doc/doc?query={query}&mode=ArtList&format=json&maxrecords=250&sort=DateDesc"
-    try:
-        response = SESSION.get(api, timeout=45)
-        print(f"GDELT HTTP status: {response.status_code}")
-        response.raise_for_status()
-        try:
-            data = response.json()
-        except ValueError:
-            print("GDELT returned non-JSON content:")
-            print(response.text[:500])
-            return []
-        articles = data.get("articles", [])
-        urls = [item.get("url") for item in articles if item.get("url")]
-        print(f"GDELT returned {len(urls)} article URLs.")
-        return urls
-    except requests.RequestException as exc:
-        print(f"GDELT request failed: {exc}")
-        return []
-    except Exception as exc:
-        print(f"GDELT search error: {exc}")
-        return []
+def sentence(text, limit=360):
+    text = re.sub(r"\s+", " ", text or "").strip()
+    if not text:
+        return "The source page contains a verified mention of zeptoverse."
+    match = re.search(r".+?[.!?](?:\s|$)", text)
+    result = match.group(0).strip() if match else text
+    return result[:limit].rstrip()
 
 
-def reddit_urls():
-    url = "https://www.reddit.com/search.rss?q=%22zeptoverse%22&sort=new"
-    try:
-        response = SESSION.get(url, timeout=20)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, "xml")
-        return [
-            item.get_text(strip=True)
-            for item in soup.find_all("link")
-            if item.get_text(strip=True).startswith("http")
-        ]
-    except Exception as exc:
-        print(f"Reddit RSS unavailable: {exc}")
-        return []
-
-
-def main():
-    os.makedirs("data", exist_ok=True)
-    try:
-        with open(OUT, encoding="utf-8") as file:
-            old = json.load(file)
-    except Exception:
-        old = {"mentions": []}
-
-    existing = {item.get("url"): item for item in old.get("mentions", [])}
-    urls = list(dict.fromkeys(gdelt_urls() + reddit_urls()))
-    print(f"Candidates found: {len(urls)}")
-
-    for url in urls:
-        if url in existing:
-            continue
-        item = parse_page(url)
-        if item:
-            existing[item["url"]] = item
-            print(f"Verified: {item['source']} — {item['title']}")
-        time.sleep(0.4)
-
-    items = sorted(existing.values(), key=lambda item: item.get("date") or "", reverse=True)[:500]
-    payload = {
-        "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "mentions": items,
+def source_name(url, title=""):
+    host = (urlparse(url).hostname or "").lower().replace("www.", "")
+    known = {
+        "bbc.com": "BBC News",
+        "bbc.co.uk": "BBC News",
+        "theguardian.com": "The Guardian",
+        "reddit.com": "Reddit",
+        "cam.ac.uk": "University of Cambridge",
+        "wired.com": "WIRED",
     }
-    with open(OUT, "w", encoding="utf-8") as file:
-        json.dump(payload, file, ensure_ascii=False, indent=2)
-    print(f"Feed now contains {len(items)} verified items.")
+    for domain, name in known.items():
+        if host == domain or host.endswith("." + domain):
+            return name
+    return host or "Online source"
 
 
-if __name__ == "__main__":
-    main()
+def normalise_url(value, base_url):
+    if isinstance(value, dict):
+        value = value.get("url") or value.get("contentUrl") or value.get("@id")
+    if not isinstance(value, str) or not value.strip():
+        return ""
+    return urljoin(base_url, value.strip())
+
+
+def walk_json(value):
+    """Yield dictionaries nested inside JSON-LD structures."""
+    if isinstance(value, dict):
+        yield value
+        for child in value.values():
+            yield from walk_json(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from walk_json(child)
+
+
+def licensed_image_from_jsonld(soup, page_url):
+    """Return an image only when its own ImageObject declares an allowed licence."""
+    og = soup.find("meta", property="og:image")
+    og_url = normalise_url(og.get("content") if og else "", page_url)
+
+    for script in soup.find_all("script", type="application/ld+json"):
+        raw = script.string or script.get_text()
+        if not raw:
+            continue
+        try:
+            data = json.loads(raw)
+        except (TypeError, ValueError):
+            continue
+
+        for item in walk_json(data):
+            item_type = item.get("@type", [])
+            if isinstance(item_type, str):
+                item_type = [item_type]
+            if not any(str(t).lower().endswith("imageobject") for t in item_type):
+                continue
+
+            image_url = normalise_url(item.get("contentUrl") or item.get("url") or item.get("@id"), page_url)
+            if not image_url:
+                continue
