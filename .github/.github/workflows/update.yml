@@ -1,0 +1,51 @@
+name: Update Zeptoverse coverage
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "10 11 * * 2"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "requirements.txt"
+      - ".github/workflows/**"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  update-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out site
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Install collector dependencies
+        run: pip install -r requirements.txt
+      - name: Collect and verify mentions
+        run: python scripts/collect.py
+      - name: Commit updated feed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/mentions.json
+          git diff --cached --quiet || git commit -m "Update verified Zeptoverse mentions"
+          git push
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Publish site
+        uses: actions/deploy-pages@v4
