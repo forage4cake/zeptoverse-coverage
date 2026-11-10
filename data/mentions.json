@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-10 19:46 UTC",
+  "updated_at": "2026-11-10 19:51 UTC",
   "mentions": [
     {
       "url": "https://www.sciencealert.com/after-42-years-of-searching-physicists-find-evidence-of-a-one-in-10-billion-particle-decay",
@@ -25,6 +25,42 @@
       "source": "wired.com",
       "summary": "An extremely rare matter-decay event opens up new possibilities for researching the physical world on scales 100 billion times smaller than an atom.",
       "date": "2026-11-05",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://podcasts.apple.com/us/podcast/the-zeptoverse/id670199157?i=1000800072980&uo=4",
+      "title": "The zeptoverse",
+      "source": "Apple Podcasts",
+      "summary": "What does it mean to look inside the very fabric of the universe?",
+      "date": "2026-11-05",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://podcasts.apple.com/us/podcast/a-new-dwarf-planet-and-a-glimpse-of-the-zeptoverse/id867430953?i=1000800065274&uo=4",
+      "title": "A New Dwarf Planet and a Glimpse of the Zeptoverse",
+      "source": "Apple Podcasts",
+      "summary": "The Vera Rubin Observatory's massive and rapid surveys of the sky have discovered a new dwarf planet in the Kuiper Belt, previously hidden by the bright background of the Milky Way.",
+      "date": "2026-11-05",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://podcasts.apple.com/us/podcast/humanoides-en-bolsa-el-secreto-del-zeptoverso-y-tu/id1895768465?i=1000800111282&uo=4",
+      "title": "Humanoides en bolsa, el secreto del Zeptoverso y tu banco en manos de la IA",
+      "source": "Apple Podcasts",
+      "summary": "¡Bienvenido a bitia-tec, tu dosis diaria de noticias tecnológicas que te dejarán boquiabierto!",
+      "date": "2026-11-05",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://podcasts.apple.com/us/podcast/zeptoverse-signals-detected-at-the-large-hadron-collider/id6831020419?i=1000799974381&uo=4",
+      "title": "Zeptoverse signals detected at the Large Hadron Collider",
+      "source": "Apple Podcasts",
+      "summary": "Explains how particle physicists detected subatomic signals a hundred billion times smaller than an atom at CERN's Large Hadron Collider.",
+      "date": "2026-11-04",
       "image": "",
       "image_license": ""
     },
@@ -78,6 +114,15 @@
       "title": "Manchester physicists step closer to the ‘Zeptoverse’ after 42-year particle search",
       "source": "manchester.ac.uk",
       "summary": "Scientists have found the first evidence for an extremely rare particle decay known as ‘Bd to mu mu’.The decay is predicted to happen only once in around 10 billion beauty particles and has taken more than 40 years to find.The result has a statistical significance of 3.2 sigma, enough to constitute evidence, but not enough to claim the gold ...",
+      "date": "",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.reddit.com/search.rss?q=%22zeptoverse%22&sort=new",
+      "title": "reddit.com: search results - \"zeptoverse\"",
+      "source": "Reddit",
+      "summary": "The source page contains a verified mention of Zeptoverse.",
       "date": "",
       "image": "",
       "image_license": ""
