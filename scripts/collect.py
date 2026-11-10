@@ -102,11 +102,21 @@ def gdelt_urls():
     query = quote('"zeptoverse"')
     api = f"https://api.gdeltproject.org/api/v2/doc/doc?query={query}&mode=ArtList&format=json&maxrecords=250&sort=DateDesc"
     try:
-        data = SESSION.get(api, timeout=30).json()
-        return [x.get("url") for x in data.get("articles", []) if x.get("url")]
-    except Exception as exc:
-        print(f"GDELT search unavailable: {exc}")
-        return []
+        response = SESSION.get(api, timeout=45)
+        print(f"GDELT HTTP status: {response.status_code}")
+        response.raise_for_status()
+
+        try:
+            data = response.json()
+        except ValueError:
+            print("GDELT returned non-JSON content:")
+            print(response.text[:500])
+            return []
+
+        articles = data.get("articles", [])
+        urls = [x.get("url") for x in articles if x.get("url")]
+        print(f"GDELT returned {len(urls)} article URLs.")
+        return urls
 
 def reddit_urls():
     url = "https://www.reddit.com/search.rss?q=%22zeptoverse%22&sort=new"
