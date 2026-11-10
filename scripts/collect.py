@@ -234,15 +234,42 @@ def bluesky_mentions():
         print(f"Bluesky unavailable: {exc}")
         return []
 
+
 def youtube_mentions():
-    """Search YouTube using its public search results page."""
+    """Find and verify YouTube videos mentioning Zeptoverse."""
 
     url = "https://www.youtube.com/results"
+
+    def walk(value):
+        if isinstance(value, dict):
+            if "videoRenderer" in value:
+                yield value["videoRenderer"]
+
+            for child in value.values():
+                yield from walk(child)
+
+        elif isinstance(value, list):
+            for child in value:
+                yield from walk(child)
+
+    def extract_text(value):
+        if not isinstance(value, dict):
+            return ""
+
+        if value.get("simpleText"):
+            return value["simpleText"]
+
+        runs = value.get("runs", [])
+        return " ".join(
+            run.get("text", "")
+            for run in runs
+            if isinstance(run, dict)
+        )
 
     try:
         response = SESSION.get(
             url,
-            params={"search_query": "Zeptoverse"},
+            params={"search_query": '"Zeptoverse"'},
             timeout=30
         )
 
@@ -250,49 +277,70 @@ def youtube_mentions():
 
         soup = BeautifulSoup(response.text, "html.parser")
         results = []
+        seen = set()
 
         for script in soup.find_all("script"):
             raw = script.string or script.get_text()
 
-            if not raw or "videoRenderer" not in raw:
+            if not raw or "ytInitialData" not in raw:
                 continue
 
-            video_ids = re.findall(
-                r'"videoId":"([A-Za-z0-9_-]{11})"',
+            match = re.search(
+                r"ytInitialData\s*=\s*",
                 raw
             )
 
-            for video_id in video_ids:
-                address = (
-                    "https://www.youtube.com/watch?v="
-                    + video_id
-                )
+            if not match:
+                continue
 
-                if any(item["url"] == address for item in results):
+            try:
+                data, _ = json.JSONDecoder().raw_decode(
+                    raw,
+                    match.end()
+                )
+            except ValueError:
+                continue
+
+            for video in walk(data):
+                video_id = video.get("videoId", "")
+
+                if not video_id or video_id in seen:
                     continue
 
+                title = extract_text(video.get("title", {}))
+                description = extract_text(
+                    video.get("descriptionSnippet", {})
+                )
+
+                if not TERM.search(title + " " + description):
+                    continue
+
+                seen.add(video_id)
+
                 results.append({
-                    "url": address,
-                    "title": "YouTube video mentioning Zeptoverse",
+                    "url": (
+                        "https://www.youtube.com/watch?v="
+                        + video_id
+                    ),
+                    "title": title,
                     "source": "YouTube",
-                    "summary": "YouTube search result. "
-                               "The video title and description "
-                               "could not be independently verified.",
+                    "summary": sentence(description or title),
                     "date": "",
                     "image": "",
                     "image_license": ""
                 })
 
         print(
-            f"YouTube search returned {len(results)} candidates. "
-            "These require manual verification."
+            f"YouTube: {len(results)} verified videos "
+            "containing Zeptoverse in the title or description."
         )
 
-        return []
+        return results
 
     except Exception as exc:
         print(f"YouTube unavailable: {exc}")
         return []
+
 
 
 def podcast_mentions():
