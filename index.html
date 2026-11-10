@@ -32,11 +32,28 @@ a{color:var(--blue);font-weight:750;text-decoration:none;font-size:.88rem}a:hove
 footer{max-width:1220px;margin:auto;padding:0 22px 35px;color:var(--muted);font-size:.8rem}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){header{padding:40px 20px 30px}main{padding:22px 15px 45px}.grid{grid-template-columns:1fr}}
+.cover-image {
+  width: 100%;
+  height: 380px;
+  overflow: hidden;
+  margin-bottom: 30px;
+  border-radius: 12px;
+}
+
+.cover-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 </style>
 </head>
 <body>
 <header><div class="eyebrow">Science · media monitor</div><h1>The Zeptoverse</h1>
-<p>The Zeptoverse is an emerging concept attracting research, reporting and online discussion. This site brings together the latest available research, news, articles and conversations about the Zeptoverse in one place, creating a growing resource for anyone interested in exploring the subject.Each card links to its original source.</p></header>
+  <div class="cover-image">
+  <img src="Quantum%20Microcosm_%20A%20Cellular%20Universe.png" alt="A mysterious scientific micro-world representing the Zeptoverse">
+</div>
+<p>The Zeptoverse is an emerging concept attracting research, reporting and online discussion. This site brings together the latest available research, news, articles and conversations about the Zeptoverse in one place, creating a growing resource for anyone interested in exploring the subject. Each card links to its original source.</p></header>
 <main>
 <div class="tools"><input id="filter" type="search" placeholder="Search headlines, sources or summaries…" aria-label="Search mentions"><span id="count" aria-live="polite"></span></div>
 <div class="notice" id="status">Loading the latest verified mentions…</div>
