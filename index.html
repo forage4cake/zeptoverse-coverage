@@ -56,6 +56,24 @@ footer{max-width:1220px;margin:auto;padding:0 22px 35px;color:var(--muted);font-
 <p>The Zeptoverse is an emerging concept attracting research, reporting and online discussion. This site brings together the latest available research, news, articles and conversations about the Zeptoverse in one place, creating a growing resource for anyone interested in exploring the subject. Each card links to its original source.</p></header>
 <main>
 <div class="tools"><input id="filter" type="search" placeholder="Search headlines, sources or summaries…" aria-label="Search mentions"><span id="count" aria-live="polite"></span></div>
+  <div class="tools" id="sort-tools">
+  <select id="sort-order" aria-label="Sort articles">
+    <option value="newest">Newest first</option>
+    <option value="oldest">Oldest first</option>
+    <option value="publication">Publication A–Z</option>
+    <option value="headline">Headline A–Z</option>
+  </select>
+
+  <select id="publication-filter" aria-label="Filter by publication">
+    <option value="">All publications</option>
+  </select>
+
+  <select id="media-filter" aria-label="Filter by media type">
+    <option value="">All media types</option>
+  </select>
+
+  <button id="clear-filters" type="button">Clear filters</button>
+</div>
 <div class="notice" id="status">Loading the latest verified mentions…</div>
 <section class="grid" id="cards" aria-label="Verified Zeptoverse mentions"></section>
 <div class="empty" id="empty">No verified mentions are currently in the feed. The next scheduled scan will add any new results that can be confirmed.</div>
@@ -70,6 +88,36 @@ const count = document.getElementById("count");
 const empty = document.getElementById("empty");
 const statusBox = document.getElementById("status");
 let mentions = [];
+  const sortOrder = document.getElementById("sort-order");
+const publicationFilter = document.getElementById("publication-filter");
+const mediaFilter = document.getElementById("media-filter");
+const clearFilters = document.getElementById("clear-filters");
+
+function classifyMedia(m) {
+  const text = `${m.url || ""} ${m.source || ""} ${m.title || ""}`.toLowerCase();
+
+  if (/podcast|spotify|apple\.com\/podcasts|soundcloud/.test(text)) return "Podcasts";
+  if (/youtube|youtu\.be|vimeo|tiktok/.test(text)) return "Videos";
+  if (/reddit|twitter|x\.com|facebook|instagram|bluesky|threads\.net/.test(text)) return "Social media";
+  if (/arxiv|pubmed|doi\.org|researchgate|nature\.com|science\.org|journal|academic/.test(text)) return "Research";
+  if (/medium\.com|substack|wordpress|blogspot|\/blog/.test(text)) return "Blogs";
+
+  return "News";
+}
+
+function populateFilters() {
+  const publications = [...new Set(mentions.map(m => m.source).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
+
+  const mediaTypes = [...new Set(mentions.map(classifyMedia))]
+    .sort((a, b) => a.localeCompare(b));
+
+  publicationFilter.innerHTML = '<option value="">All publications</option>' +
+    publications.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join("");
+
+  mediaFilter.innerHTML = '<option value="">All media types</option>' +
+    mediaTypes.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+}
 
 function esc(value="") {
   return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -127,10 +175,36 @@ function makeArtwork(mention = {}) {
 }
   function render() {
   const q = filter.value.trim().toLowerCase();
-  const shown = mentions.filter(m => [m.title,m.source,m.summary,m.url].join(" ").toLowerCase().includes(q));
+
+  let shown = mentions.filter(m => {
+    const matchesSearch = [m.title, m.source, m.summary, m.url]
+      .join(" ").toLowerCase().includes(q);
+
+    const matchesPublication = !publicationFilter.value ||
+      m.source === publicationFilter.value;
+
+    const matchesMedia = !mediaFilter.value ||
+      classifyMedia(m) === mediaFilter.value;
+
+    return matchesSearch && matchesPublication && matchesMedia;
+  });
+
+  shown.sort((a, b) => {
+    switch (sortOrder.value) {
+      case "oldest":
+        return (a.date || "9999").localeCompare(b.date || "9999");
+      case "publication":
+        return (a.source || "").localeCompare(b.source || "");
+      case "headline":
+        return (a.title || "").localeCompare(b.title || "");
+      default:
+        return (b.date || "").localeCompare(a.date || "");
+    }
+  });
+
   cards.innerHTML = shown.map(m => `
     <article class="card">
-  ${m.image ? `<img src="${esc(m.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<img src="${makeArtwork(m)}" alt="Zeptoverse-inspired scientific artwork" loading="lazy">`}
+      ${m.image ? `<img src="${esc(m.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<img src="${makeArtwork(m)}" alt="Zeptoverse-inspired scientific artwork" loading="lazy">`}
       <div class="body">
         <div class="source">${esc(m.source || "Online source")}</div>
         <h2>${esc(m.title || "Untitled mention")}</h2>
@@ -138,6 +212,7 @@ function makeArtwork(mention = {}) {
         <div class="meta"><span class="date">${esc(m.date || "")}</span><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">Read original ↗</a></div>
       </div>
     </article>`).join("");
+
   count.textContent = `${shown.length} of ${mentions.length} mentions`;
   empty.style.display = shown.length ? "none" : "block";
 }
@@ -155,10 +230,21 @@ async function loadFeed() {
   } catch (error) {
     statusBox.textContent = "The live feed could not be loaded. Check that data/mentions.json is published alongside this page.";
     mentions = [];
-    render();
+    populateFilters();render();
   }
 }
 filter.addEventListener("input", render);
+sortOrder.addEventListener("change", render);
+publicationFilter.addEventListener("change", render);
+mediaFilter.addEventListener("change", render);
+
+clearFilters.addEventListener("click", () => {
+  filter.value = "";
+  sortOrder.value = "newest";
+  publicationFilter.value = "";
+  mediaFilter.value = "";
+  render();
+});
 loadFeed();
 </script>
 </body></html>
