@@ -46,6 +46,75 @@ footer{max-width:1220px;margin:auto;padding:0 22px 35px;color:var(--muted);font-
   object-fit: cover;
   display: block;
 }
+  /* Media-type colour coding */
+.card {
+  border: 3px solid transparent;
+}
+
+.card.videos {
+  border-color: #e53935;
+}
+
+.card.podcasts {
+  border-color: #fbc02d;
+}
+
+.card.news {
+  border-color: #43a047;
+}
+
+.card.research {
+  border-color: #1976d2;
+}
+
+.card.blogs {
+  border-color: #8e44ad;
+}
+
+.card.social-media {
+  border-color: #ef6c00;
+}
+  .media-label {
+  display: inline-block;
+  padding: 4px 9px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.videos .media-label {
+  background: #e53935;
+  color: white;
+}
+
+.podcasts .media-label {
+  background: #fbc02d;
+  color: #222;
+}
+
+.news .media-label {
+  background: #43a047;
+  color: white;
+}
+
+.research .media-label {
+  background: #1976d2;
+  color: white;
+}
+
+.blogs .media-label {
+  background: #8e44ad;
+  color: white;
+}
+
+.social-media .media-label {
+  background: #ef6c00;
+  color: white;
+}
 </style>
 </head>
 <body>
@@ -203,10 +272,11 @@ function makeArtwork(mention = {}) {
   });
 
   cards.innerHTML = shown.map(m => `
-    <article class="card">
+    <article class="card ${classifyMedia(m).toLowerCase().replace(/\s+/g, "-")}">
       ${m.image ? `<img src="${esc(m.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<img src="${makeArtwork(m)}" alt="Zeptoverse-inspired scientific artwork" loading="lazy">`}
       <div class="body">
         <div class="source">${esc(m.source || "Online source")}</div>
+<div class="media-label">${esc(classifyMedia(m))}</div>
         <h2>${esc(m.title || "Untitled mention")}</h2>
         <p class="summary">${esc(m.summary || "The source page contains a verified mention of zeptoverse.")}</p>
         <div class="meta"><span class="date">${esc(m.date || "")}</span><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">Read original ↗</a></div>
