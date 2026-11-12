@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-12 11:45 UTC",
+  "updated_at": "2026-11-12 11:58 UTC",
   "mentions": [
     {
       "url": "https://www.sciencealert.com/after-42-years-of-searching-physicists-find-evidence-of-a-one-in-10-billion-particle-decay",
@@ -69,6 +69,15 @@
       "title": "Scientists are on the verge of accessing the “zeptoverse”, a world a million times smaller than a proton where as-yet-unknown particles and forces might be hiding",
       "source": "labrujulaverde.com",
       "summary": "Physicists have been chasing a particle decay for more than 40 years.",
+      "date": "2026-11-04",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.newscientist.com/article/2597289-beauty-particle-decay-opens-the-door-to-the-zeptoverse/",
+      "title": "Physicists get first glimpse of the zeptoverse from LHC experiment | New Scientist",
+      "source": "newscientist.com",
+      "summary": "Data from the Large Hadron Collider has revealed evidence of a long-sought particle process that serves as a guide into the realm of the smallest scales ever probed",
       "date": "2026-11-04",
       "image": "",
       "image_license": ""
