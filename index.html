@@ -38,7 +38,12 @@ main{max-width:1220px;margin:auto;padding:30px 22px 60px}
 input{font:inherit;padding:12px 15px;border:1px solid var(--line);border-radius:12px;background:white;flex:1 1 260px;min-width:0}
 #count,.updated{font-size:.86rem;color:var(--muted)}
 .notice{padding:13px 16px;border:1px solid #d7e2f7;background:#edf3ff;color:#344b77;border-radius:12px;font-size:.9rem;margin-bottom:22px}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px}
+#cards {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 19px;
+  width: 100%;
+}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;min-width:0;box-shadow:0 5px 18px #1824330a}
 .card img{display:block;width:100%;height:180px;object-fit:cover;background:#e8edf5}
 .no-image{height:112px;background:radial-gradient(circle at 70% 30%,#ffffff55 0 2px,transparent 3px),linear-gradient(135deg,#273f70,#718bc8)}
