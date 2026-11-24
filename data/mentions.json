@@ -1,6 +1,33 @@
 {
-  "updated_at": "2026-11-17 11:57 UTC",
+  "updated_at": "2026-11-24 12:05 UTC",
   "mentions": [
+    {
+      "url": "https://podcasts.apple.com/us/podcast/the-zeptoverse-how-cern-is-searching-for-physics/id1874948322?i=1000803100590&uo=4",
+      "title": "The Zeptoverse: How CERN Is Searching for Physics Beyond the Standard Model",
+      "source": "Apple Podcasts",
+      "summary": "After more than four decades of searching, physicists at CERN have found evidence of an extraordinarily rare particle transformation.",
+      "date": "2026-11-20",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://podcasts.apple.com/us/podcast/a-new-breakthrough-the-zeptoverse/id1619542128?i=1000803028279&uo=4",
+      "title": "A New Breakthrough… the Zeptoverse",
+      "source": "Apple Podcasts",
+      "summary": "While champagne corks popped around the world on election day, November 3, 2026, toasts of bubbly were abundant north of Geneva on the Swiss-French border where CERN is located.",
+      "date": "2026-11-20",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://podcasts.apple.com/us/podcast/we-found-the-zeptoverse-what-does-the-first-evidence/id6800904745?i=1000802857929&uo=4",
+      "title": "We Found the Zeptoverse - What does the first evidence for a neutral B-meson decaying into two muons actually tell us? | Sleepy Facts About the Universe",
+      "source": "Apple Podcasts",
+      "summary": "Got something to say to this podcast?",
+      "date": "2026-11-19",
+      "image": "",
+      "image_license": ""
+    },
     {
       "url": "https://www.sciencealert.com/after-42-years-of-searching-physicists-find-evidence-of-a-one-in-10-billion-particle-decay",
       "title": "After 42 Years of Searching, Physicists Find Evidence of a One-in-10-Billion Particle Decay",
@@ -88,6 +115,15 @@
       "source": "metro.co.uk",
       "summary": "'You’d need to do some serious shrinking.'",
       "date": "2026-11-03",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://podcasts.apple.com/us/podcast/zeptoverse-another-universe-is-hiding-inside-our-own/id6836581529?i=1000802827064&uo=4",
+      "title": "Zeptoverse! Another Universe Is Hiding Inside Our Own!?",
+      "source": "Apple Podcasts",
+      "summary": "Learn more about your ad choices.",
+      "date": "2026-10-13",
       "image": "",
       "image_license": ""
     },
@@ -348,6 +384,42 @@
       "title": "Welcome To The Zeptoverse",
       "source": "crooksandliars.com",
       "summary": "Move over quantum mechanics, we have something new to investigate.",
+      "date": "",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=-j60aWU_SLg",
+      "title": "A New Breakthrough… the Zeptoverse | Regina Meredith",
+      "source": "YouTube",
+      "summary": "A New Breakthrough… the Zeptoverse | Regina Meredith",
+      "date": "",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=jgaQf_zwwl4",
+      "title": "The Zeptoverse: What Lies Beyond the Atom?",
+      "source": "YouTube",
+      "summary": "The Zeptoverse: What Lies Beyond the Atom?",
+      "date": "",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.livescience.com/physics-mathematics/particle-physics/cern-physicists-measure-the-universe-at-the-smallest-scale-ever-opening-best-chance-of-finding-new-physics",
+      "title": "CERN physicists measure universe at smallest scale ever, catching 1 in 10 billion particle interaction",
+      "source": "livescience.com",
+      "summary": "Physicists at CERN have detected a rare, 1-in-10-billion particle interaction that opens a view into the 'zeptoverse,' the smallest distance scale ever examined.",
+      "date": "",
+      "image": "",
+      "image_license": ""
+    },
+    {
+      "url": "https://www.bbc.com/news/videos/cwdr8veexkrzo",
+      "title": "What is the zeptoverse?",
+      "source": "BBC News",
+      "summary": "BBC science correspondent, Pallab Ghosh, takes us into the zeptoverse and explains how it could change our ideas of how the universe works.",
       "date": "",
       "image": "",
       "image_license": ""
